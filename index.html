@@ -3,15 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LinkedIn Data Web Data Connector 2</title>
+    <title>NFL Data Web Data Connector</title>
     <script type="text/javascript" src="https://tableau.github.io/webdataconnector/libs/tableauwdc-2.3.0.js"></script>
     <script type="text/javascript" src="https://connectors.tableau.com/libs/tableauwdc-2.0.latest.js"></script>
     <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
     <script type="text/javascript">
-        var linkedinConnector = tableau.makeConnector();
+        // Create a new Tableau Web Data Connector (WDC)
+        var nflConnector = tableau.makeConnector();
 
-        // Initialization function
-        linkedinConnector.init = function(initCallback) {
+        // Initialize the connector
+        nflConnector.init = function(initCallback) {
             if (tableau.phase == tableau.phaseEnum.interactivePhase) {
                 if (tableau.connectionData) {
                     var connector = JSON.parse(tableau.connectionData);
@@ -21,30 +22,35 @@
             initCallback();
         };
 
-        // Get schema to define data columns
-        linkedinConnector.getSchema = function(schemaCallback) {
+        // Get the schema (structure) of the data
+        nflConnector.getSchema = function(schemaCallback) {
             var cols = [
                 { id: "id", alias: "ID", dataType: tableau.dataTypeEnum.string },
                 { id: "uid", alias: "UID", dataType: tableau.dataTypeEnum.string },
+                { id: "slug", alias: "Slug", dataType: tableau.dataTypeEnum.string },
+                { id: "abbreviation", alias: "Abbreviation", dataType: tableau.dataTypeEnum.string },
+                { id: "displayName", alias: "DisplayName", dataType: tableau.dataTypeEnum.string },
+                { id: "shortDisplayName", alias: "ShortDisplayName", dataType: tableau.dataTypeEnum.string },
                 { id: "name", alias: "Name", dataType: tableau.dataTypeEnum.string },
-                { id: "nickname", alias: "NickName", dataType: tableau.dataTypeEnum.string },
-                { id: "location", alias: "Location", dataType: tableau.dataTypeEnum.string }
+                { id: "nickname", alias: "Nickname", dataType: tableau.dataTypeEnum.string },
+                { id: "location", alias: "Location", dataType: tableau.dataTypeEnum.string },
+                { id: "color", alias: "Color", dataType: tableau.dataTypeEnum.string }
+                // Add more columns here based on the API response structure
             ];
 
             var tableSchema = {
-                id: "nfl-team-listing",
-                alias: "NFL Team Listing",
+                id: "nflTeamListing",
+                alias: "NFL Team Listing Data",
                 columns: cols
             };
 
             schemaCallback([tableSchema]);
         };
 
-        // Get data and handle pagination if necessary
-        linkedinConnector.getData = function(table, doneCallback) {
-            var apiKey = "8b2d55889bmshafe33f821c7a253p15f9bejsnd92ff5f9a206";  // Replace with your actual API Key
-            var apiUrl = "nfl-api-data.p.rapidapi.com";
-            //var endpoint = "profile";  // Specify your endpoint here (e.g., profile, connections)
+        // Fetch data and handle pagination if needed
+        nflConnector.getData = function(table, doneCallback) {
+            var apiKey = "8b2d55889bmshafe33f821c7a253p15f9bejsnd92ff5f9a206";  // API Key
+            var apiUrl = "https://nfl-api-data.p.rapidapi.com/nfl-team-listing/v1/data";  // API URL
 
             var allRows = [];  // Array to store all rows of data
             var nextPageUrl = apiUrl;  // Start with the first page of data
@@ -63,20 +69,29 @@
                     console.log("API Response: ", data);  // Log the full API response to check its structure
 
                     if (data && data.data) {
-                        var tableData = data.data.map(item => ({
-                            id: item.id,
-                            urn: item.uid,
-                            name: item.name,
-                            nickname: item.nickname,
-                            location: item.location
-                        }));
+                        var tableData = data.data.map(item => {
+                            var row = {
+                                "id": item.id,
+                                "uid": item.uid,
+                                "slug": item.slug,
+                                "abbreviation": item.abbreviation,
+                                "displayName": item.displayName,
+                                "shortDisplayName": item.shortDisplayName,
+                                "name": item.name,
+                                "nickname": item.nickname,
+                                "location": item.location,
+                                "color": item.color,
+                            };
+                            return row;
+                        });
 
-                        allRows = allRows.concat(tableData);
+                        allRows = allRows.concat(tableData);  // Add rows to the collection
 
                         if (data.nextPage) {
-                            fetchPage(data.nextPage);
+                            fetchPage(data.nextPage);  // Recursively fetch the next page if it exists
                         } else {
-                            table.appendRows(allRows);
+                            console.log("All Rows:", allRows);  // Check the data before appending to Tableau
+                            table.appendRows(allRows);  // Send all rows to Tableau
                             doneCallback();
                         }
                     } else {
@@ -85,16 +100,17 @@
                     }
                 })
                 .catch(error => {
-                    console.error("Error fetching LinkedIn data: ", error);
+                    console.error("Error fetching data: ", error);
                     doneCallback();
                 });
             }
 
-            fetchPage(nextPageUrl);
+            fetchPage(nextPageUrl);  // Start fetching data from the first page
         };
 
-        tableau.registerConnector(linkedinConnector);
+        tableau.registerConnector(nflConnector);
 
+        // Handle form submission for user input (API key)
         $(document).ready(function() {
             $("#input-form").on("submit", function(e) {
                 e.preventDefault();
@@ -103,9 +119,9 @@
                         apiKey: $("#apiKey").val()  // Store the API key entered by the user
                     };
 
-                    tableau.connectionData = JSON.stringify(data);
-                    tableau.connectionName = "NFL Team Listing";  // Set name for Tableau data source
-                    tableau.submit();
+                    tableau.connectionData = JSON.stringify(data);  // Store connection data in Tableau
+                    tableau.connectionName = "NFL Team Listing Data";  // Set the data source name
+                    tableau.submit();  // Submit the connector to Tableau
                 } else {
                     this.classList.add("was-validated");
                 }
@@ -114,7 +130,7 @@
     </script>
 </head>
 <body>
-    <h1>NFL Team Listing </h1>
+    <h1>NFL Team Listing Web Data Connector</h1>
     <form id="input-form">
         <div class="form-group" style="display:none">
             <label for="apiKey">API Key:</label>
