@@ -25,14 +25,15 @@
         linkedinConnector.getSchema = function(schemaCallback) {
             var cols = [
                 { id: "id", alias: "ID", dataType: tableau.dataTypeEnum.string },
-                { id: "urn", alias: "URN", dataType: tableau.dataTypeEnum.string },
-                { id: "username", alias: "Username", dataType: tableau.dataTypeEnum.string },
-                { id: "firstname", alias: "First Name", dataType: tableau.dataTypeEnum.string }
+                { id: "uid", alias: "UID", dataType: tableau.dataTypeEnum.string },
+                { id: "name", alias: "Name", dataType: tableau.dataTypeEnum.string },
+                { id: "nickname", alias: "NickName", dataType: tableau.dataTypeEnum.string },
+                { id: "location", alias: "Location", dataType: tableau.dataTypeEnum.string }
             ];
 
             var tableSchema = {
-                id: "linkedinData",
-                alias: "LinkedIn Data",
+                id: "nfl-team-listing",
+                alias: "NFL Team Listing",
                 columns: cols
             };
 
@@ -42,18 +43,18 @@
         // Get data and handle pagination if necessary
         linkedinConnector.getData = function(table, doneCallback) {
             var apiKey = "8b2d55889bmshafe33f821c7a253p15f9bejsnd92ff5f9a206";  // Replace with your actual API Key
-            var apiUrl = "https://linkedin-data-api.p.rapidapi.com/";
-            var endpoint = "profile";  // Specify your endpoint here (e.g., profile, connections)
+            var apiUrl = "nfl-api-data.p.rapidapi.com";
+            //var endpoint = "profile";  // Specify your endpoint here (e.g., profile, connections)
 
             var allRows = [];  // Array to store all rows of data
-            var nextPageUrl = apiUrl + endpoint;  // Start with the first page of data
+            var nextPageUrl = apiUrl;  // Start with the first page of data
 
             function fetchPage(url) {
                 fetch(url, {
                     method: 'GET',
                     headers: {
                         "X-RapidAPI-Key": apiKey,
-                        "X-RapidAPI-Host": "linkedin-data-api.p.rapidapi.com",
+                        "X-RapidAPI-Host": "nfl-api-data.p.rapidapi.com",
                         "Content-Type": "application/json"
                     }
                 })
@@ -64,9 +65,10 @@
                     if (data && data.data) {
                         var tableData = data.data.map(item => ({
                             id: item.id,
-                            urn: item.urn,
-                            username: item.username,
-                            firstname: item.firstName
+                            urn: item.uid,
+                            name: item.name,
+                            nickname: item.nickname,
+                            location: item.location
                         }));
 
                         allRows = allRows.concat(tableData);
@@ -102,7 +104,7 @@
                     };
 
                     tableau.connectionData = JSON.stringify(data);
-                    tableau.connectionName = "LinkedIn Data";  // Set name for Tableau data source
+                    tableau.connectionName = "NFL Team Listing";  // Set name for Tableau data source
                     tableau.submit();
                 } else {
                     this.classList.add("was-validated");
@@ -112,7 +114,7 @@
     </script>
 </head>
 <body>
-    <h1>LinkedIn Web Data Connector 2</h1>
+    <h1>NFL Team Listing </h1>
     <form id="input-form">
         <div class="form-group" style="display:none">
             <label for="apiKey">API Key:</label>
