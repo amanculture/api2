@@ -22,23 +22,7 @@
         };
 
         // Get schema to define data columns
-        linkedinConnector.getSchema = function(schemaCallback) {
-            var cols = [
-                { id: "id", alias: "ID", dataType: tableau.dataTypeEnum.string },
-                { id: "uid", alias: "UID", dataType: tableau.dataTypeEnum.string },
-                { id: "name", alias: "Name", dataType: tableau.dataTypeEnum.string },
-                { id: "nickname", alias: "NickName", dataType: tableau.dataTypeEnum.string },
-                { id: "location", alias: "Location", dataType: tableau.dataTypeEnum.string }
-            ];
-
-            var tableSchema = {
-                id: "nfl-team-listing",
-                alias: "NFL Team Listing",
-                columns: cols
-            };
-
-            schemaCallback([tableSchema]);
-        };
+        
 
         // Get data and handle pagination if necessary
         linkedinConnector.getData = function(table, doneCallback) {
